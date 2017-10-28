@@ -1,0 +1,62 @@
+{% extends 'base.html' %} {% load staticfiles %} {% block content %}
+
+
+<span id="messagebox" class="border-bottom-0">
+</span>
+<div>
+
+
+ <input id="message_input" rows="4" cols="50" value="type your text here !">
+</input>
+<button onclick="outputMessage()"> send </button>
+</div>
+<script>
+
+
+console.log( document.getElementById("message_input").value);
+
+
+function outputMessage() {
+  var textareaval = $('#message_input').val();
+  console.log(textareaval);
+  $('#message_input').val(" ");
+  socket.onopen(textareaval);
+}
+
+socket = new WebSocket("ws://" + window.location.host + "/chat/");
+
+  socket.onopen = function(message) {
+    //console.log("Connected to chat socket");
+
+    socket.send(message);
+    console.log(socket);
+
+}
+
+socket.onclose = function () {
+      console.log("Disconnected from chat socket");
+  }
+
+socket.onmessage = function (message) {
+    // Decode the JSON
+    console.log("Got websocket message " + message.data);
+    console.log(message.data);
+    console.log(message);
+
+    var div = document.getElementById('messagebox');
+
+    div.innerHTML += '<p>'+message.data+'<p>';
+
+
+}
+
+socket.onerror = function()
+{
+  console.log("errors");
+}
+// Call onopen directly if socket is already open
+if (socket.readyState == WebSocket.OPEN) socket.onopen();
+
+</script>
+
+{% endblock %}

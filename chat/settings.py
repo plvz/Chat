@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'channels',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -56,7 +57,7 @@ ROOT_URLCONF = 'chat.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['/home/pellevoizin/Documents/chat/chat/app/templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -68,6 +69,11 @@ TEMPLATES = [
         },
     },
 ]
+SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
+TEMPLATE_DIRS = (
+    os.path.join(SETTINGS_PATH, 'templates'),
+)
+
 
 WSGI_APPLICATION = 'chat.wsgi.application'
 
@@ -78,7 +84,20 @@ CHANNEL_LAYERS = {
         "ROUTING": "chat.routing.channel_routing",
     },
 }
+redis_host = os.environ.get('REDIS_HOST', 'localhost')
 
+# Channel layer definitions
+# http://channels.readthedocs.org/en/latest/deploying.html#setting-up-a-channel-backend
+CHANNEL_LAYERS = {
+    "default": {
+        # This example app uses the Redis channel layer implementation asgi_redis
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(redis_host, 6379)],
+        },
+       "ROUTING": "chat.routing.channel_routing", # We will create it in a moment
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
