@@ -9,8 +9,11 @@ from django.contrib.auth.decorators import login_required
 from .forms import UserForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from django.contrib.auth import logout  as django_logout
+
+
 # Create your views here.
-@login_required
+@login_required(login_url='/signin')
 def index(request):
     current_user = request.user
     print(current_user.username)
@@ -23,9 +26,13 @@ def signup(request):
 
 def post_user(request):
     form = UserForm(request.POST, request.FILES)
+    username = request.POST['username']
+    password = request.POST['password']
     if form.is_valid():
-        user = User.objects.create_user(request.POST['username'], 'lennon@thebeatles.com', request.POST['password'])
+        user = User.objects.create_user(username, 'lennon@thebeatles.com', password)
         user.save()
+        user = authenticate(username=username, password=password)
+        login(request, user)
     return HttpResponseRedirect('/')
 
 def signin(request):
@@ -47,4 +54,8 @@ def authentication(request):
     else:
         # Return an 'invalid login' error message.
         print('error authentication')
+        return HttpResponseRedirect('/')
+
+def logout(request):
+        django_logout(request)
         return HttpResponseRedirect('/')

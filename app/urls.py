@@ -13,6 +13,8 @@ urlpatterns = [
     url(r'^signup/post/$', views.post_user, name='post_user'),
     url(r'^signin/$', views.signin, name='form'),
     url(r'^signin/login/$', views.authentication, name='authentication'),
+    url(r'^logout/$', views.logout, name='logout'),
+
 ]
 
 # Add to the bottom of your file

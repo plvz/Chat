@@ -1,91 +1,117 @@
 {% extends 'base.html' %} {% load staticfiles %} {% block content %}
 
 
-{{ current_user }}
-
-{% for user in users %}
-<div class="col-md-4">
-    <div class="announce panel panel-default">
+<div class="container">
+  <div class="row">
+    <div class="panel panel-default">
       <div class="panel-heading">
-        <h2 class="panel-title">{{ user.username }}</h2>
-        <div id={{ user.username }} class="border-bottom-0">
-        </div>
-        <div>
+        <h1>Chat of {{ current_user }} </h1>
+        <div class="panel-body">
+
+          <div id="message_box" class="border-bottom-0 col-md-8">
+
+          </div>
+          <div class="col-md-4">
+            <form id="userslist" action="">
+              {% for user in users %}
+              <p>
+                <input type="radio" name="user" value={{ user.username }}> {{ user.username }} {% endfor %}</p>
+            </form>
+          </div>
+          <div class="col-md-8">
 
 
-         <input id={{ user.username }} rows="4" cols="50" value="type your text here !">
-        </input>
-        <button onclick=outputMessage({{user.username}})> send </button>
+            <input id="text_input" style="width: 80%;" value="type your text here !">
+            </input>
+            <button onclick=outputMessage() style="width: 15%;"> send </button>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 
-{% endfor %}
-
+</div>
 
 <script>
+  var discussions = {}
+  socket = new WebSocket("ws://" + window.location.host + "/chat/");
+  var current_user = "{{current_user}}";
+  var div_message_box = document.getElementById("message_box");
 
 
-socket = new WebSocket("ws://" + window.location.host + "/chat/");
-var current_user = "{{current_user}}";
+  function outputMessage() {
+    var textareaval = $('input#text_input').val();
+    var target = $('input[name=user]:checked', '#userslist').val();
+    var message = '{user_source:"' + current_user + '",target:"' + target + '",content:"' + textareaval + '"}';
+    var history_message = {
+      'type': 'src',
+      'message': textareaval
+    }
 
+    if (discussions.hasOwnProperty(target)) {
+      discussions[target].push(history_message);
+    } else {
+      discussions[target] = [history_message];
+    }
 
-function outputMessage(element) {
-  console.log("ouput"+element);
-  console.log(current_user);
-  console.log(current_user+"----->"+element.id);
-  var textareaval = $('input#'+element.id).val();
+    $('input#text_input').val(" ");
 
-  //var myobj = JSON.parse('{ "user_source":"titeuf,"target": "test","message":" fdsfds"}');
-  var target = element.id;
-  //var message = '{ "user_source" : "'+current_user+',"target" : "'+target+'","message" : "'+textareaval+'"}';
-
-  var message = '{user_source:"'+current_user+'",target:"'+target+'",content:"'+textareaval+'"}';
-
-
-
-
-
-  $('input#'+element.id).val(" ");
-  var div = document.getElementById(element.id);
-  div.innerHTML += '<p>'+textareaval+'<p>';
-
-  socket.onopen(message);
-}
-
-
-socket.onopen = function(message) {
-    //console.log("Connected to chat socket");
-
-    socket.send(message);
-    console.log(socket);
-
-}
-
-socket.onclose = function () {
-      console.log("Disconnected from chat socket");
+    div_message_box.innerHTML += '<p style="background-color: #4EA148;">' + textareaval + '<p>';
+    socket.onopen(message);
   }
 
-socket.onmessage = function (message) {
+  function load_history(user) {
+    $('div#message_box').empty();
+    if (discussions.hasOwnProperty(user)) {
+      for (var i = 0; i < discussions[user].length; i++) {
+        if (discussions[user][i].type == 'src') {
+          div_message_box.innerHTML += '<p style="background-color: #4EA148;">' + discussions[user][i].message + '<p>';
+        } else {
+          div_message_box.innerHTML += '<p style="background-color: #394CAE;" align="right">' + discussions[user][i].message + '<p>';
+
+        }
+      }
+    }
+  }
+
+  $('#userslist input').on('change', function() {
+    load_history($('input[name=user]:checked', '#userslist').val());
+  });
+
+
+  socket.onopen = function(message) {
+    socket.send(message);
+  }
+
+  socket.onclose = function() {
+    console.log("Disconnected from chat socket");
+  }
+
+  socket.onmessage = function(message) {
     // Decode the JSON
-    eval('var data='+message.data);
-    console.log(data)
-    var div = document.getElementById(data.user_source);
-    //var div = document.getElementById('messagebox');
-    div.innerHTML += '<p align="right">'+data.content+'<p>';
+    eval('var data=' + message.data);
+    if (data.target == current_user) {
+      var history_message = {
+        'type': 'target',
+        'message': data.content
+      }
+      if (discussions.hasOwnProperty(data.target)) {
+        discussions[data.user_source].push(history_message);
+      } else {
+        discussions[data.user_source] = [history_message];
+      }
+
+      div_message_box.innerHTML += '<p style="background-color: #394CAE;" align="right">' + data.content + '<p>';
+    }
 
 
-}
+  }
 
-socket.onerror = function()
-{
-  console.log("errors");
-}
-// Call onopen directly if socket is already open
-if (socket.readyState == WebSocket.OPEN) socket.onopen();
-
+  socket.onerror = function() {
+      console.log("errors");
+    }
+    // Call onopen directly if socket is already open
+  if (socket.readyState == WebSocket.OPEN) socket.onopen();
 </script>
 
 {% endblock %}

@@ -1,7 +1,12 @@
 {% extends 'base.html' %} {% load staticfiles %} {% block content %}
+<div class="announce panel panel-default">
+  <div class="panel-heading">
+    <h1>Sign In </h1>
+    <form action="login/" method="post">
+      {% csrf_token %} {{form.as_p}}
+      <input type="submit" value="Submit" />
+    </form>
+    <a href="/signup">Have you got an account ?</a> {% endblock %}
 
-<form action="login/" method="post">
-  {% csrf_token %} {{form.as_p}}
-  <input type="submit" value="Submit" />
-</form>
-{% endblock %}
+  </div>
+</div>
