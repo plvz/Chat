@@ -6,5 +6,5 @@ channel_routing = [
     # Called when WebSockets get sent a data frame
     route("websocket.receive", ws_message),
 
-
+    route("websocket.disconnect", ws_disconnect),
 ]

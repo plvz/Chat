@@ -2,17 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from channels.handler import AsgiHandler
 from channels import Group
 from django.shortcuts import render, redirect
-
-
-def http_consumer(message):
-    # Make standard HTTP response - access ASGI path attribute directly
-    #response = HttpResponse("Hello world! You asked for %s" % message.content['path'])
-    # Encode that response into message format (ASGI)
-    Group('users').add(message.reply_channel)
-
-    response = HttpResponseRedirect('/')
-    for chunk in AsgiHandler.encode_response(response):
-        message.reply_channel.send(chunk)
+from pprint import pprint
 
 def ws_receive(message):
     # All WebSocket frames have either a text or binary payload; we decode the
@@ -26,9 +16,10 @@ def ws_receive(message):
 # Connected to websocket.receive
 def ws_message(message):
     # ASGI WebSocket packet-received and send-packet message types
+    pprint(message)
     content = message.content['text']
     Group("chat").send({
-        "text": "[user] %s" % content,
+        "text": "%s" % content,
     })
 
 # Connected to websocket.connect

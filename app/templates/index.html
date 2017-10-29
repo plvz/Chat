@@ -1,31 +1,62 @@
 {% extends 'base.html' %} {% load staticfiles %} {% block content %}
 
 
-<span id="messagebox" class="border-bottom-0">
-</span>
-<div>
+{{ current_user }}
+
+{% for user in users %}
+<div class="col-md-4">
+    <div class="announce panel panel-default">
+      <div class="panel-heading">
+        <h2 class="panel-title">{{ user.username }}</h2>
+        <div id={{ user.username }} class="border-bottom-0">
+        </div>
+        <div>
 
 
- <input id="message_input" rows="4" cols="50" value="type your text here !">
-</input>
-<button onclick="outputMessage()"> send </button>
-</div>
+         <input id={{ user.username }} rows="4" cols="50" value="type your text here !">
+        </input>
+        <button onclick=outputMessage({{user.username}})> send </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+{% endfor %}
+
+
 <script>
 
 
-console.log( document.getElementById("message_input").value);
+socket = new WebSocket("ws://" + window.location.host + "/chat/");
+var current_user = "{{current_user}}";
 
 
-function outputMessage() {
-  var textareaval = $('#message_input').val();
-  console.log(textareaval);
-  $('#message_input').val(" ");
-  socket.onopen(textareaval);
+function outputMessage(element) {
+  console.log("ouput"+element);
+  console.log(current_user);
+  console.log(current_user+"----->"+element.id);
+  var textareaval = $('input#'+element.id).val();
+
+  //var myobj = JSON.parse('{ "user_source":"titeuf,"target": "test","message":" fdsfds"}');
+  var target = element.id;
+  //var message = '{ "user_source" : "'+current_user+',"target" : "'+target+'","message" : "'+textareaval+'"}';
+
+  var message = '{user_source:"'+current_user+'",target:"'+target+'",content:"'+textareaval+'"}';
+
+
+
+
+
+  $('input#'+element.id).val(" ");
+  var div = document.getElementById(element.id);
+  div.innerHTML += '<p>'+textareaval+'<p>';
+
+  socket.onopen(message);
 }
 
-socket = new WebSocket("ws://" + window.location.host + "/chat/");
 
-  socket.onopen = function(message) {
+socket.onopen = function(message) {
     //console.log("Connected to chat socket");
 
     socket.send(message);
@@ -39,13 +70,11 @@ socket.onclose = function () {
 
 socket.onmessage = function (message) {
     // Decode the JSON
-    console.log("Got websocket message " + message.data);
-    console.log(message.data);
-    console.log(message);
-
-    var div = document.getElementById('messagebox');
-
-    div.innerHTML += '<p>'+message.data+'<p>';
+    eval('var data='+message.data);
+    console.log(data)
+    var div = document.getElementById(data.user_source);
+    //var div = document.getElementById('messagebox');
+    div.innerHTML += '<p align="right">'+data.content+'<p>';
 
 
 }
