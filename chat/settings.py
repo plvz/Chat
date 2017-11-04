@@ -57,7 +57,7 @@ ROOT_URLCONF = 'chat.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['/home/pellevoizin/Documents/chat/chat/app/templates',],
+        'DIRS': [BASE_DIR+'/app/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
